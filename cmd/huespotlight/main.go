@@ -35,6 +35,39 @@ func getBridgeIPFromUser(bridges []huego.Bridge) (string, error) {
 	return bridges[bridgeIndex].Host, nil
 }
 
+func waitForLinkButtonPress(bridge *huego.Bridge) (string, error) {
+	buttonPressedChoice := 1
+	exitChoice := 2
+
+	fmt.Println("Need to authenticate with Hue bridge, please")
+	fmt.Println("press the link button on your bridge...")
+	fmt.Printf("%d) Link button has been pressed\n", buttonPressedChoice)
+	fmt.Printf("%d) Cancel\n", exitChoice)
+
+	var linkButtonChoice int
+	_, err := fmt.Scanf("%d", &linkButtonChoice)
+	if err != nil {
+		return "", err
+	}
+
+	if linkButtonChoice == exitChoice {
+		fmt.Println("Exiting...")
+		os.Exit(0)
+	}
+	if linkButtonChoice != buttonPressedChoice {
+		return "", fmt.Errorf("Error: %d is not a valid choice, choose between %d and %d",
+			linkButtonChoice, buttonPressedChoice, exitChoice)
+	}
+
+	newUsername, err := bridge.CreateUser(appNameForBridge)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("Created user %s\n", newUsername)
+	return newUsername, nil
+}
+
 func main() {
 	bridges, err := huego.DiscoverAll()
 	if err != nil {
@@ -68,34 +101,11 @@ func main() {
 
 	var username string
 	if len(os.Args) < 3 {
-		buttonPressedChoice := 1
-		exitChoice := 2
-		fmt.Println("Need to authenticate with Hue bridge, please\npress the link button on your bridge...")
-		fmt.Printf("%d) Link button has been pressed\n", buttonPressedChoice)
-		fmt.Printf("%d) Cancel\n", exitChoice)
-		var linkButtonChoice int
-		_, err := fmt.Scanf("%d", &linkButtonChoice)
+		username, err = waitForLinkButtonPress(bridge)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if linkButtonChoice == exitChoice {
-			fmt.Println("Exiting...")
-			os.Exit(0)
-		}
-		if linkButtonChoice != buttonPressedChoice {
-			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n", linkButtonChoice,
-				buttonPressedChoice, exitChoice)
-			os.Exit(1)
-		}
-
-		newUsername, err := bridge.CreateUser(appNameForBridge)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Printf("Created user %s\n", newUsername)
-		username = newUsername
 	} else {
 		username = os.Args[2]
 	}
