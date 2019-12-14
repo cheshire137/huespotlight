@@ -1,0 +1,107 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/amimof/huego"
+)
+
+const appNameForBridge = "huespotlight"
+
+func main() {
+	bridges, err := huego.DiscoverAll()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	var bridgeIP string
+	if len(os.Args) < 2 {
+		exitIndex := len(bridges) + 1
+		fmt.Println("Found Hue bridges:")
+		for i, bridge := range bridges {
+			fmt.Printf("%d) %s\n", i+1, bridge.Host)
+		}
+		fmt.Printf("%d) Cancel\n", exitIndex)
+		fmt.Println("Specify which bridge to use:")
+		fmt.Print("> ")
+		var bridgeIndex int
+		_, err := fmt.Scanf("%d", &bridgeIndex)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if bridgeIndex == exitIndex {
+			fmt.Println("Exiting...")
+			os.Exit(0)
+		}
+		bridgeIndex--
+		if bridgeIndex < 0 || bridgeIndex > len(bridges) {
+			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n", bridgeIndex+1, 1,
+				exitIndex)
+			os.Exit(1)
+		}
+		bridgeIP = bridges[bridgeIndex].Host
+	} else {
+		bridgeIP = os.Args[1]
+	}
+
+	fmt.Printf("Looking up Hue bridge at IP %s...\n", bridgeIP)
+	var bridge *huego.Bridge
+	for _, b := range bridges {
+		if b.Host == bridgeIP {
+			bridge = &b
+			break
+		}
+	}
+	if bridge == nil {
+		fmt.Println("Error: Could not find bridge")
+		os.Exit(1)
+	}
+
+	var username string
+	if len(os.Args) < 3 {
+		buttonPressedChoice := 1
+		exitChoice := 2
+		fmt.Println("Need to authenticate with Hue bridge, please\npress the link button on your bridge...")
+		fmt.Printf("%d) Link button has been pressed\n", buttonPressedChoice)
+		fmt.Printf("%d) Cancel\n", exitChoice)
+		var linkButtonChoice int
+		_, err := fmt.Scanf("%d", &linkButtonChoice)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if linkButtonChoice == exitChoice {
+			fmt.Println("Exiting...")
+			os.Exit(0)
+		}
+		if linkButtonChoice != buttonPressedChoice {
+			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n", linkButtonChoice,
+				buttonPressedChoice, exitChoice)
+			os.Exit(1)
+		}
+
+		newUsername, err := bridge.CreateUser(appNameForBridge)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Printf("Created user %s\n", newUsername)
+		username = newUsername
+	} else {
+		username = os.Args[2]
+	}
+
+	fmt.Printf("Logging in as Hue bridge user %s\n", username)
+	bridge = bridge.Login(username)
+
+	lights, err := bridge.GetLights()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Found %d lights\n", len(lights))
+}
