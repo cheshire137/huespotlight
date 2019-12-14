@@ -9,6 +9,32 @@ import (
 
 const appNameForBridge = "huespotlight"
 
+func getBridgeIPFromUser(bridges []huego.Bridge) (string, error) {
+	exitIndex := len(bridges) + 1
+	fmt.Println("Found Hue bridges:")
+	for i, bridge := range bridges {
+		fmt.Printf("%d) %s\n", i+1, bridge.Host)
+	}
+	fmt.Printf("%d) Cancel\n", exitIndex)
+	fmt.Println("Specify which bridge to use:")
+	fmt.Print("> ")
+	var bridgeIndex int
+	_, err := fmt.Scanf("%d", &bridgeIndex)
+	if err != nil {
+		return "", err
+	}
+	if bridgeIndex == exitIndex {
+		fmt.Println("Exiting...")
+		os.Exit(0)
+	}
+	bridgeIndex--
+	if bridgeIndex < 0 || bridgeIndex > len(bridges) {
+		return "", fmt.Errorf("Error: %d is not a valid choice, choose between %d and %d",
+			bridgeIndex+1, 1, exitIndex)
+	}
+	return bridges[bridgeIndex].Host, nil
+}
+
 func main() {
 	bridges, err := huego.DiscoverAll()
 	if err != nil {
@@ -18,31 +44,11 @@ func main() {
 
 	var bridgeIP string
 	if len(os.Args) < 2 {
-		exitIndex := len(bridges) + 1
-		fmt.Println("Found Hue bridges:")
-		for i, bridge := range bridges {
-			fmt.Printf("%d) %s\n", i+1, bridge.Host)
-		}
-		fmt.Printf("%d) Cancel\n", exitIndex)
-		fmt.Println("Specify which bridge to use:")
-		fmt.Print("> ")
-		var bridgeIndex int
-		_, err := fmt.Scanf("%d", &bridgeIndex)
+		bridgeIP, err = getBridgeIPFromUser(bridges)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if bridgeIndex == exitIndex {
-			fmt.Println("Exiting...")
-			os.Exit(0)
-		}
-		bridgeIndex--
-		if bridgeIndex < 0 || bridgeIndex > len(bridges) {
-			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n", bridgeIndex+1, 1,
-				exitIndex)
-			os.Exit(1)
-		}
-		bridgeIP = bridges[bridgeIndex].Host
 	} else {
 		bridgeIP = os.Args[1]
 	}
