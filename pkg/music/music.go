@@ -70,20 +70,20 @@ func (m *Music) Authenticate(config *config.Config) func(http.ResponseWriter, *h
 	}
 }
 
-func (m *Music) GetCurrentSong() (*spotify.ID, error) {
+func (m *Music) GetCurrentSong() (*spotify.ID, time.Duration, error) {
 	result, err := m.client.PlayerCurrentlyPlaying()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if !result.Playing {
-		return nil, errors.New("nothing currently playing on Spotify")
+		return nil, 0, errors.New("nothing currently playing on Spotify")
 	}
 	artists := make([]string, len(result.Item.Artists))
 	for i, artist := range result.Item.Artists {
 		artists[i] = artist.Name
 	}
 	fmt.Printf("Currently playing: %s by %s\n", result.Item.Name, strings.Join(artists, ", "))
-	return &result.Item.ID, nil
+	return &result.Item.ID, time.Duration(result.Progress) * time.Millisecond, nil
 }
 
 func (m *Music) GetSongAnalysis(id spotify.ID) error {

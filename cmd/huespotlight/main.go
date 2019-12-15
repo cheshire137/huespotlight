@@ -105,11 +105,13 @@ func main() {
 		}
 	}
 
-	trackID, err := musicClient.GetCurrentSong()
+	trackID, progressMS, err := musicClient.GetCurrentSong()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	fmt.Printf("- Currently %s into the song\n", progressMS)
 
 	if err := musicClient.GetSongAnalysis(*trackID); err != nil {
 		fmt.Println(err)
