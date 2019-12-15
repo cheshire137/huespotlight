@@ -27,9 +27,15 @@ func NewMusic(config *config.Config) *Music {
 }
 
 func (m *Music) Authenticate(config *config.Config) func(http.ResponseWriter, *http.Request) {
-	if len(config.SpotifyToken) > 0 {
+	if len(config.SpotifyAccessToken) > 0 {
 		fmt.Println("Using Spotify token from config to authenticate...")
-		token := &oauth2.Token{AccessToken: config.SpotifyToken}
+		token := &oauth2.Token{AccessToken: config.SpotifyAccessToken}
+		if len(config.SpotifyRefreshToken) > 0 {
+			token.RefreshToken = config.SpotifyRefreshToken
+		}
+		if len(config.SpotifyTokenType) > 0 {
+			token.TokenType = config.SpotifyTokenType
+		}
 		client := m.auth.NewClient(token)
 		m.client = &client
 		return nil
@@ -51,6 +57,10 @@ func (m *Music) Authenticate(config *config.Config) func(http.ResponseWriter, *h
 		fmt.Printf("- Spotify token: %s\n", token.AccessToken)
 		client := m.auth.NewClient(token)
 		m.client = &client
+
+		config.SetSpotifyAccessToken(token.AccessToken)
+		config.SetSpotifyRefreshToken(token.RefreshToken)
+		config.SetSpotifyTokenType(token.TokenType)
 
 		_, err = w.Write([]byte("Authenticated with Spotify, you can go back to your term now!"))
 		if err != nil {

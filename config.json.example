@@ -1,6 +1,5 @@
 {
   "app_url": "http://localhost:1234",
-  "spotify_token": "a valid Spotify auth token, if known (optional)",
   "spotify_client_id": "your Spotify app client ID here",
   "spotify_redirect_uri": "your Spotify app redirect URI here",
   "spotify_client_secret": "your Spotify app client secret here",

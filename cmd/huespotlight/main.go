@@ -41,7 +41,12 @@ func main() {
 	}
 
 	fmt.Printf("Found %d lights\n", lightCount)
-	addr := config.ServerAddr()
+
+	addr, err := config.ServerAddr()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	fmt.Printf("Starting server at %s\n", addr)
 
 	musicClient := music.NewMusic(config)
@@ -90,6 +95,12 @@ func main() {
 		if userChoice != authDoneChoice {
 			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n",
 				userChoice, authDoneChoice, exitChoice)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Saving Spotify login information to %s...\n", configPath)
+		if err := config.Save(configPath); err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}

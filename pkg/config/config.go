@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 )
 
 type Config struct {
-	AppURL              *url.URL
 	AppURLStr           string `json:"app_url"`
-	SpotifyToken        string `json:"spotify_token"`
+	SpotifyAccessToken  string `json:"spotify_access_token"`
+	SpotifyRefreshToken string `json:"spotify_refresh_token"`
+	SpotifyTokenType    string `json:"spotify_token_type"`
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"spotify_client_secret"`
 	BridgeIP            string `json:"bridge_ip"`
@@ -31,16 +33,45 @@ func LoadFromFile(path string) (*Config, error) {
 	if err := config.validate(); err != nil {
 		return nil, err
 	}
-	serverURL, err := url.Parse(config.AppURLStr)
-	if err != nil {
-		return nil, err
-	}
-	config.AppURL = serverURL
 	return config, nil
 }
 
-func (c *Config) ServerAddr() string {
-	return fmt.Sprintf("%s:%s", c.AppURL.Hostname(), c.AppURL.Port())
+func (c *Config) AppURL() (*url.URL, error) {
+	serverURL, err := url.Parse(c.AppURLStr)
+	if err != nil {
+		return nil, err
+	}
+	return serverURL, nil
+}
+
+func (c *Config) SetSpotifyAccessToken(token string) {
+	c.SpotifyAccessToken = token
+}
+
+func (c *Config) SetSpotifyRefreshToken(token string) {
+	c.SpotifyRefreshToken = token
+}
+
+func (c *Config) SetSpotifyTokenType(tokenType string) {
+	c.SpotifyTokenType = tokenType
+}
+
+func (c *Config) Save(path string) error {
+	prefix := ""
+	indent := "  "
+	jsonData, err := json.MarshalIndent(c, prefix, indent)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, jsonData, 0644)
+}
+
+func (c *Config) ServerAddr() (string, error) {
+	url, err := c.AppURL()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%s", url.Hostname(), url.Port()), nil
 }
 
 func (c *Config) String() string {
