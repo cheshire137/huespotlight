@@ -8,15 +8,17 @@ import (
 )
 
 type Config struct {
-	SpotifyClientID    string `json:"spotify_client_id"`
-	SpotifyRedirectURI string `json:"spotify_redirect_uri"`
-	BridgeIP           string `json:"bridge_ip"`
-	BridgeUser         string `json:"bridge_user"`
+	SpotifyClientID     string `json:"spotify_client_id"`
+	SpotifyClientSecret string `json:"spotify_client_secret"`
+	SpotifyRedirectURI  string `json:"spotify_redirect_uri"`
+	BridgeIP            string `json:"bridge_ip"`
+	BridgeUser          string `json:"bridge_user"`
 }
 
 func Load() (*Config, error) {
 	config := &Config{}
 	config.SpotifyClientID = os.Getenv("SPOTIFY_CLIENT_ID")
+	config.SpotifyClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
 	config.SpotifyRedirectURI = os.Getenv("SPOTIFY_REDIRECT_URI")
 	config.BridgeIP = os.Getenv("BRIDGE_IP")
 	config.BridgeUser = os.Getenv("BRIDGE_USER")
@@ -50,6 +52,9 @@ func (c *Config) String() string {
 func (c *Config) validate() error {
 	if len(c.SpotifyClientID) < 1 {
 		return errors.New("missing Spotify app client ID")
+	}
+	if len(c.SpotifyClientSecret) < 1 {
+		return errors.New("missing Spotify app client secret")
 	}
 	if len(c.SpotifyRedirectURI) < 1 {
 		return errors.New("missing Spotify app redirect URI")
