@@ -47,6 +47,21 @@ func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	return &Bridge{ip: ip, user: user, client: client}
 }
 
+// FlashLights makes each light on the bridge flash once.
+func (b *Bridge) FlashLights() error {
+	lights, err := b.client.GetLights()
+	if err != nil {
+		return err
+	}
+	for _, light := range lights {
+		err = light.Alert("select")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // TotalLights returns a count of how many lights are registered to the
 // bridge.
 func (b *Bridge) TotalLights() (int, error) {

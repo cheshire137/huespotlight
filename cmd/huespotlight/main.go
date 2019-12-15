@@ -37,4 +37,9 @@ func main() {
 	}
 
 	fmt.Printf("Found %d lights\n", lightCount)
+
+	if err := bridge.FlashLights(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
