@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/cheshire137/huespotlight/pkg/config"
@@ -68,9 +66,34 @@ func main() {
 		}
 	}
 
-	stopSignal := make(chan os.Signal, 1)
-	signal.Notify(stopSignal, syscall.SIGINT, syscall.SIGTERM)
-	<-stopSignal
+	authDoneChoice := 1
+	exitChoice := 2
+
+	fmt.Println("Have you authenticated with Spotify in your browser?")
+	fmt.Printf("%d) Yes\n", authDoneChoice)
+	fmt.Printf("%d) Cancel\n", exitChoice)
+
+	var userChoice int
+	_, err = fmt.Scanf("%d", &userChoice)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	shutdownFunc()
+
+	if userChoice == exitChoice {
+		fmt.Println("Exiting...")
+		os.Exit(0)
+	}
+	if userChoice != authDoneChoice {
+		fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n",
+			userChoice, authDoneChoice, exitChoice)
+		os.Exit(1)
+	}
+
+	if err := musicClient.GetCurrentSong(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

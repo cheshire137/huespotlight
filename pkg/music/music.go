@@ -1,10 +1,12 @@
 package music
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/zmb3/spotify"
@@ -47,6 +49,22 @@ func (m *Music) GetAuthenticationHandler() func(http.ResponseWriter, *http.Reque
 			os.Exit(1)
 		}
 	}
+}
+
+func (m *Music) GetCurrentSong() error {
+	result, err := m.client.PlayerCurrentlyPlaying()
+	if err != nil {
+		return err
+	}
+	if !result.Playing {
+		return errors.New("nothing currently playing on Spotify")
+	}
+	artists := make([]string, len(result.Item.Artists))
+	for i, artist := range result.Item.Artists {
+		artists[i] = artist.Name
+	}
+	fmt.Printf("Currently playing: %s by %s\n", result.Item.Name, strings.Join(artists, ", "))
+	return nil
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
