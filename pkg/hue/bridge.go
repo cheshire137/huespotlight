@@ -16,13 +16,29 @@ type Bridge struct {
 	client *huego.Bridge
 }
 
-func NewBridge(ip string, user string) *Bridge {
+func NewBridge() (*Bridge, error) {
+	bridges, err := huego.DiscoverAll()
+	if err != nil {
+		return nil, err
+	}
+	return NewBridgeFromList(bridges)
+}
+
+func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	client := huego.New(ip, user)
 	return &Bridge{ip: ip, user: user, client: client}
 }
 
 func NewBridgeFromList(bridges []huego.Bridge) (*Bridge, error) {
 	ip, err := getIPFromUser(bridges)
+	if err != nil {
+		return nil, err
+	}
+	return NewBridgeFromListWithIP(bridges, ip)
+}
+
+func NewBridgeWithIP(ip string) (*Bridge, error) {
+	bridges, err := huego.DiscoverAll()
 	if err != nil {
 		return nil, err
 	}
