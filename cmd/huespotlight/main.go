@@ -45,54 +45,62 @@ func main() {
 	fmt.Printf("Starting server at %s\n", addr)
 
 	musicClient := music.NewMusic(config)
-	handler := musicClient.GetAuthenticationHandler()
+	handler := musicClient.Authenticate(config)
 
-	server := &http.Server{Addr: addr, Handler: http.HandlerFunc(handler)}
-	go func(srv *http.Server) {
-		err := srv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
+	if handler != nil {
+		server := &http.Server{Addr: addr, Handler: http.HandlerFunc(handler)}
+		go func(srv *http.Server) {
+			err := srv.ListenAndServe()
+			if err != nil && err != http.ErrServerClosed {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}(server)
+
+		shutdownFunc := func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			fmt.Println("Shutting down server...")
+			if err := server.Shutdown(ctx); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		authDoneChoice := 1
+		exitChoice := 2
+
+		fmt.Println("Have you authenticated with Spotify in your browser?")
+		fmt.Printf("%d) Yes\n", authDoneChoice)
+		fmt.Printf("%d) Cancel\n", exitChoice)
+
+		var userChoice int
+		_, err = fmt.Scanf("%d", &userChoice)
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-	}(server)
 
-	shutdownFunc := func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		fmt.Println("Shutting down server...")
-		if err := server.Shutdown(ctx); err != nil {
-			fmt.Println(err)
+		shutdownFunc()
+
+		if userChoice == exitChoice {
+			fmt.Println("Exiting...")
+			os.Exit(0)
+		}
+		if userChoice != authDoneChoice {
+			fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n",
+				userChoice, authDoneChoice, exitChoice)
 			os.Exit(1)
 		}
 	}
 
-	authDoneChoice := 1
-	exitChoice := 2
-
-	fmt.Println("Have you authenticated with Spotify in your browser?")
-	fmt.Printf("%d) Yes\n", authDoneChoice)
-	fmt.Printf("%d) Cancel\n", exitChoice)
-
-	var userChoice int
-	_, err = fmt.Scanf("%d", &userChoice)
+	trackID, err := musicClient.GetCurrentSong()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	shutdownFunc()
-
-	if userChoice == exitChoice {
-		fmt.Println("Exiting...")
-		os.Exit(0)
-	}
-	if userChoice != authDoneChoice {
-		fmt.Printf("Error: %d is not a valid choice, choose between %d and %d\n",
-			userChoice, authDoneChoice, exitChoice)
-		os.Exit(1)
-	}
-
-	if err := musicClient.GetCurrentSong(); err != nil {
+	if err := musicClient.GetSongAnalysis(*trackID); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

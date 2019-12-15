@@ -11,6 +11,7 @@ import (
 type Config struct {
 	AppURL              *url.URL
 	AppURLStr           string `json:"app_url"`
+	SpotifyToken        string `json:"spotify_token"`
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"spotify_client_secret"`
 	BridgeIP            string `json:"bridge_ip"`

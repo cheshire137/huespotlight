@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
 
 	"github.com/cheshire137/huespotlight/pkg/config"
 )
@@ -25,7 +26,15 @@ func NewMusic(config *config.Config) *Music {
 	return &Music{auth: &auth}
 }
 
-func (m *Music) GetAuthenticationHandler() func(http.ResponseWriter, *http.Request) {
+func (m *Music) Authenticate(config *config.Config) func(http.ResponseWriter, *http.Request) {
+	if len(config.SpotifyToken) > 0 {
+		fmt.Println("Using Spotify token from config to authenticate...")
+		token := &oauth2.Token{AccessToken: config.SpotifyToken}
+		client := m.auth.NewClient(token)
+		m.client = &client
+		return nil
+	}
+
 	state := getRandomString(10)
 	authURL := m.auth.AuthURL(state)
 	fmt.Println("Please visit this URL to authenticate:")
@@ -51,19 +60,29 @@ func (m *Music) GetAuthenticationHandler() func(http.ResponseWriter, *http.Reque
 	}
 }
 
-func (m *Music) GetCurrentSong() error {
+func (m *Music) GetCurrentSong() (*spotify.ID, error) {
 	result, err := m.client.PlayerCurrentlyPlaying()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !result.Playing {
-		return errors.New("nothing currently playing on Spotify")
+		return nil, errors.New("nothing currently playing on Spotify")
 	}
 	artists := make([]string, len(result.Item.Artists))
 	for i, artist := range result.Item.Artists {
 		artists[i] = artist.Name
 	}
 	fmt.Printf("Currently playing: %s by %s\n", result.Item.Name, strings.Join(artists, ", "))
+	return &result.Item.ID, nil
+}
+
+func (m *Music) GetSongAnalysis(id spotify.ID) error {
+	analysis, err := m.client.GetAudioAnalysis(id)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Beats")
+	fmt.Println(analysis.Beats)
 	return nil
 }
 
