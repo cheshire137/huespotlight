@@ -26,6 +26,8 @@ func NewBridge() (*Bridge, error) {
 
 func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	client := huego.New(ip, user)
+	fmt.Printf("Logging in as Hue bridge user %s\n", user)
+	client = client.Login(user)
 	return &Bridge{ip: ip, user: user, client: client}
 }
 
@@ -47,28 +49,25 @@ func NewBridgeWithIP(ip string) (*Bridge, error) {
 
 func NewBridgeFromListWithIP(bridges []huego.Bridge, ip string) (*Bridge, error) {
 	fmt.Printf("Looking up Hue bridge at IP %s...\n", ip)
-	var bridge *huego.Bridge
+	var client *huego.Bridge
 	for _, b := range bridges {
 		if b.Host == ip {
-			bridge = &b
+			client = &b
 			break
 		}
 	}
-	if bridge == nil {
+	if client == nil {
 		return nil, errors.New("Could not find bridge")
 	}
 
-	user, err := createUser(bridge)
+	user, err := createUser(client)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Bridge{ip: ip, user: user, client: bridge}, nil
-}
-
-func (b *Bridge) Login() {
-	fmt.Printf("Logging in as Hue bridge user %s\n", b.user)
-	b.client.Login(b.user)
+	fmt.Printf("Logging in as Hue bridge user %s\n", user)
+	client = client.Login(user)
+	return &Bridge{ip: ip, user: user, client: client}, nil
 }
 
 func (b *Bridge) TotalLights() (int, error) {

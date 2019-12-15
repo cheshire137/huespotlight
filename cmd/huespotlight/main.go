@@ -15,20 +15,20 @@ func main() {
 		bridgeIP := os.Args[1]
 		username := os.Args[2]
 		bridge = hue.NewBridgeWithIPAndUser(bridgeIP, username)
-	} else {
-		if len(os.Args) > 1 {
-			bridgeIP := os.Args[1]
-			bridge, err = hue.NewBridgeWithIP(bridgeIP)
-		} else {
-			bridge, err = hue.NewBridge()
+	} else if len(os.Args) > 1 {
+		bridgeIP := os.Args[1]
+		bridge, err = hue.NewBridgeWithIP(bridgeIP)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
+	} else {
+		bridge, err = hue.NewBridge()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
-
-	bridge.Login()
 
 	lightCount, err := bridge.TotalLights()
 	if err != nil {
