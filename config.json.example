@@ -1,0 +1,5 @@
+{
+  "spotify_client_id": "your Spotify app client ID here",
+  "bridge_ip": "your Philips Hue bridge IP address (optional)",
+  "bridge_user": "a user on your Philips Hue bridge (optional)"
+}
