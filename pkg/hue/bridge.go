@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/amimof/huego"
+
+	"github.com/cheshire137/huespotlight/pkg/config"
 )
 
 const appNameForBridge = "huespotlight"
@@ -19,7 +21,13 @@ type Bridge struct {
 
 // NewBridge constructs a bridge connection by discovering available Philips Hue bridges
 // on the network and prompting you to authenticate with one.
-func NewBridge() (*Bridge, error) {
+func NewBridge(config *config.Config) (*Bridge, error) {
+	if len(config.BridgeIP) > 0 && len(config.BridgeUser) > 0 {
+		return NewBridgeWithIPAndUser(config.BridgeIP, config.BridgeUser), nil
+	}
+	if len(config.BridgeIP) > 0 {
+		return NewBridgeWithIP(config.BridgeIP)
+	}
 	bridges, err := huego.DiscoverAll()
 	if err != nil {
 		return nil, err
@@ -42,7 +50,6 @@ func NewBridgeWithIP(ip string) (*Bridge, error) {
 // on that bridge and returns an authenticated connection with that bridge.
 func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	client := huego.New(ip, user)
-	fmt.Printf("Logging in as Hue bridge user %s\n", user)
 	client = client.Login(user)
 	return &Bridge{ip: ip, user: user, client: client}
 }
@@ -93,7 +100,6 @@ func newBridgeFromListWithIP(bridges []huego.Bridge, ip string) (*Bridge, error)
 		return nil, err
 	}
 
-	fmt.Printf("Logging in as Hue bridge user %s\n", user)
 	client = client.Login(user)
 	return &Bridge{ip: ip, user: user, client: client}, nil
 }
@@ -163,6 +169,6 @@ func createUser(bridge *huego.Bridge) (string, error) {
 		return "", err
 	}
 
-	fmt.Printf("Created user %s\n", newUsername)
+	fmt.Printf("Created bridge user %s\n", newUsername)
 	return newUsername, nil
 }

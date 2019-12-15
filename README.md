@@ -4,15 +4,17 @@ A _work in progress_ Go tool to work with your Philips Hue lights.
 
 ## How to Run
 
+Create a Spotify application at [developer.spotify.com/my-applications](https://developer.spotify.com/my-applications/).
+
 ```sh
-# Hue bridges on your network will be discovered and you will be able to choose one.
-go run cmd/huespotlight/main.go
+cp config.json.example config.json
+```
 
-# Or, if you know the IP address of your Hue bridge, specify it and you will be
-# prompted to press the bridge's link button to authenticate:
-go run cmd/huespotlight/main.go 192.168.x.x
+Modify config.json to specify the client ID for your Spotify app. If you know the IP address
+of your Philips Hue bridge, or a user on that bridge, you can specify those as well.
+Otherwise, the app will discover bridges on your network and tell you the IP and user
+so you can add them to your config file. Then run the app with:
 
-# Or, if you know the IP address of your Hue bridge and a user on that bridge,
-# specify them:
-go run cmd/huespotlight/main.go 192.168.x.x ExistingBridgeUserName
+```
+go run cmd/huespotlight/main.go config.json
 ```

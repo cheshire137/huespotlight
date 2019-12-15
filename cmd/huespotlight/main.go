@@ -4,30 +4,30 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cheshire137/huespotlight/pkg/config"
 	"github.com/cheshire137/huespotlight/pkg/hue"
 )
 
 func main() {
-	var bridge *hue.Bridge
-	var err error
+	if len(os.Args) < 2 {
+		fmt.Printf("%s path_to_config_file.json\n", os.Args[0])
+		os.Exit(0)
+	}
 
-	if len(os.Args) > 2 {
-		bridgeIP := os.Args[1]
-		username := os.Args[2]
-		bridge = hue.NewBridgeWithIPAndUser(bridgeIP, username)
-	} else if len(os.Args) > 1 {
-		bridgeIP := os.Args[1]
-		bridge, err = hue.NewBridgeWithIP(bridgeIP)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	} else {
-		bridge, err = hue.NewBridge()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	configPath := os.Args[1]
+	config, err := config.LoadFromFile(configPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Loaded config:")
+	fmt.Println(config)
+
+	bridge, err := hue.NewBridge(config)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	lightCount, err := bridge.TotalLights()
@@ -37,9 +37,4 @@ func main() {
 	}
 
 	fmt.Printf("Found %d lights\n", lightCount)
-
-	if err := bridge.FlashLights(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 }
