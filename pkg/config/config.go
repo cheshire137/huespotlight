@@ -8,14 +8,16 @@ import (
 )
 
 type Config struct {
-	SpotifyClientID string `json:"spotify_client_id"`
-	BridgeIP        string `json:"bridge_ip"`
-	BridgeUser      string `json:"bridge_user"`
+	SpotifyClientID    string `json:"spotify_client_id"`
+	SpotifyRedirectURI string `json:"spotify_redirect_uri"`
+	BridgeIP           string `json:"bridge_ip"`
+	BridgeUser         string `json:"bridge_user"`
 }
 
 func Load() (*Config, error) {
 	config := &Config{}
 	config.SpotifyClientID = os.Getenv("SPOTIFY_CLIENT_ID")
+	config.SpotifyRedirectURI = os.Getenv("SPOTIFY_REDIRECT_URI")
 	config.BridgeIP = os.Getenv("BRIDGE_IP")
 	config.BridgeUser = os.Getenv("BRIDGE_USER")
 	if err := config.validate(); err != nil {
@@ -41,13 +43,16 @@ func LoadFromFile(path string) (*Config, error) {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("- Spotify Client ID: %s\n- Philips Hue bridge IP: %s\n- Philips Hue bridge user: %s",
-		c.SpotifyClientID, c.BridgeIP, c.BridgeUser)
+	return fmt.Sprintf("- Spotify client ID: %s\n- Spotify redirect URI: %s\n- Philips Hue bridge IP: %s\n- Philips Hue bridge user: %s",
+		c.SpotifyClientID, c.SpotifyRedirectURI, c.BridgeIP, c.BridgeUser)
 }
 
 func (c *Config) validate() error {
 	if len(c.SpotifyClientID) < 1 {
-		return errors.New("no Spotify app client ID in SPOTIFY_CLIENT_ID")
+		return errors.New("missing Spotify app client ID")
+	}
+	if len(c.SpotifyRedirectURI) < 1 {
+		return errors.New("missing Spotify app redirect URI")
 	}
 	return nil
 }

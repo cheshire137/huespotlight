@@ -1,5 +1,6 @@
 {
   "spotify_client_id": "your Spotify app client ID here",
+  "spotify_redirect_uri": "your Spotify app redirect URI here",
   "bridge_ip": "your Philips Hue bridge IP address (optional)",
   "bridge_user": "a user on your Philips Hue bridge (optional)"
 }
