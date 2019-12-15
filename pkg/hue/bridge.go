@@ -10,12 +10,15 @@ import (
 
 const appNameForBridge = "huespotlight"
 
+// Bridge represents an authenticated connection with a Philips Hue light bright.
 type Bridge struct {
 	ip     string
 	user   string
 	client *huego.Bridge
 }
 
+// NewBridge constructs a bridge connection by discovering available Philips Hue bridges
+// on the network and prompting you to authenticate with one.
 func NewBridge() (*Bridge, error) {
 	bridges, err := huego.DiscoverAll()
 	if err != nil {
@@ -24,6 +27,8 @@ func NewBridge() (*Bridge, error) {
 	return NewBridgeFromList(bridges)
 }
 
+// NewBridgeWithIPAndUser takes an IP address to a Philips Hue bridge and a username
+// on that bridge and returns an authenticated connection with that bridge.
 func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	client := huego.New(ip, user)
 	fmt.Printf("Logging in as Hue bridge user %s\n", user)
@@ -31,6 +36,8 @@ func NewBridgeWithIPAndUser(ip string, user string) *Bridge {
 	return &Bridge{ip: ip, user: user, client: client}
 }
 
+// NewBridgeFromList takes a list of known Philips Hue light bridges and returns
+// an authenticated connection with one of them, based on input from the user.
 func NewBridgeFromList(bridges []huego.Bridge) (*Bridge, error) {
 	ip, err := getIPFromUser(bridges)
 	if err != nil {
@@ -39,6 +46,9 @@ func NewBridgeFromList(bridges []huego.Bridge) (*Bridge, error) {
 	return NewBridgeFromListWithIP(bridges, ip)
 }
 
+// NewBridgeWithIP takes an IP address for a Philips Hue light bridge and returns
+// an authenticated connection to that light bridge after prompting the user
+// to connect to the bridge.
 func NewBridgeWithIP(ip string) (*Bridge, error) {
 	bridges, err := huego.DiscoverAll()
 	if err != nil {
@@ -47,6 +57,9 @@ func NewBridgeWithIP(ip string) (*Bridge, error) {
 	return NewBridgeFromListWithIP(bridges, ip)
 }
 
+// NewBridgeFromListWithIP takes a list of known Philips Hue light bridges and
+// an IP address for one of them and returns an authenticated connection to that
+// bridge.
 func NewBridgeFromListWithIP(bridges []huego.Bridge, ip string) (*Bridge, error) {
 	fmt.Printf("Looking up Hue bridge at IP %s...\n", ip)
 	var client *huego.Bridge
@@ -70,6 +83,8 @@ func NewBridgeFromListWithIP(bridges []huego.Bridge, ip string) (*Bridge, error)
 	return &Bridge{ip: ip, user: user, client: client}, nil
 }
 
+// TotalLights returns a count of how many lights are registered to the
+// bridge.
 func (b *Bridge) TotalLights() (int, error) {
 	lights, err := b.client.GetLights()
 	if err != nil {
