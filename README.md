@@ -4,7 +4,10 @@ A _work in progress_ Go tool to work with your Philips Hue lights.
 
 ## How to Run
 
-Create a Spotify application at [developer.spotify.com/my-applications](https://developer.spotify.com/my-applications/). Edit the app and specify a redirect URI.
+Create a Spotify application at [developer.spotify.com/my-applications](https://developer.spotify.com/my-applications/).
+
+Edit the app and specify `http://localhost:1234` as your app's redirect URI. This redirect
+URI needs to match the address specified in your config.json.
 
 ```sh
 cp config.json.example config.json

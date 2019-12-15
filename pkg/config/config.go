@@ -4,28 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 )
 
 type Config struct {
+	AppURL              *url.URL
+	AppURLStr           string `json:"app_url"`
 	SpotifyClientID     string `json:"spotify_client_id"`
 	SpotifyClientSecret string `json:"spotify_client_secret"`
-	SpotifyRedirectURI  string `json:"spotify_redirect_uri"`
 	BridgeIP            string `json:"bridge_ip"`
 	BridgeUser          string `json:"bridge_user"`
-}
-
-func Load() (*Config, error) {
-	config := &Config{}
-	config.SpotifyClientID = os.Getenv("SPOTIFY_CLIENT_ID")
-	config.SpotifyClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
-	config.SpotifyRedirectURI = os.Getenv("SPOTIFY_REDIRECT_URI")
-	config.BridgeIP = os.Getenv("BRIDGE_IP")
-	config.BridgeUser = os.Getenv("BRIDGE_USER")
-	if err := config.validate(); err != nil {
-		return nil, err
-	}
-	return config, nil
 }
 
 func LoadFromFile(path string) (*Config, error) {
@@ -41,23 +30,32 @@ func LoadFromFile(path string) (*Config, error) {
 	if err := config.validate(); err != nil {
 		return nil, err
 	}
+	serverURL, err := url.Parse(config.AppURLStr)
+	if err != nil {
+		return nil, err
+	}
+	config.AppURL = serverURL
 	return config, nil
 }
 
+func (c *Config) ServerAddr() string {
+	return fmt.Sprintf("%s:%s", c.AppURL.Hostname(), c.AppURL.Port())
+}
+
 func (c *Config) String() string {
-	return fmt.Sprintf("- Spotify client ID: %s\n- Spotify redirect URI: %s\n- Philips Hue bridge IP: %s\n- Philips Hue bridge user: %s",
-		c.SpotifyClientID, c.SpotifyRedirectURI, c.BridgeIP, c.BridgeUser)
+	return fmt.Sprintf("- app URL: %s\n- Spotify client ID: %s\n- Philips Hue bridge IP: %s\n- Philips Hue bridge user: %s",
+		c.AppURLStr, c.SpotifyClientID, c.BridgeIP, c.BridgeUser)
 }
 
 func (c *Config) validate() error {
+	if len(c.AppURLStr) < 1 {
+		return errors.New("missing app URL")
+	}
 	if len(c.SpotifyClientID) < 1 {
 		return errors.New("missing Spotify app client ID")
 	}
 	if len(c.SpotifyClientSecret) < 1 {
 		return errors.New("missing Spotify app client secret")
-	}
-	if len(c.SpotifyRedirectURI) < 1 {
-		return errors.New("missing Spotify app redirect URI")
 	}
 	return nil
 }
